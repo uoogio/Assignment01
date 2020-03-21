@@ -10,21 +10,31 @@ $(document).ready(() => {
   class DeviceData {
     constructor(deviceId) {
       this.deviceId = deviceId;
-      this.maxLen = 50;
+      this.maxLen = 100;
       this.timeData = new Array(this.maxLen);
       this.temperatureData = new Array(this.maxLen);
       this.humidityData = new Array(this.maxLen);
+      this.winddirectionData = new Array(this.maxLen);
+      this.windintensityData = new Array(this.maxLen);
+      this.rainheightData = new Array(this.maxLen);
     }
 
-    addData(time, temperature, humidity) {
+    addData(time, temperature, humidity, winddirection, windintensity, rainheight) {
       this.timeData.push(time);
       this.temperatureData.push(temperature);
       this.humidityData.push(humidity || null);
+      this.winddirectionData.push(winddirection || null);
+      this.windintensityData.push(windintensity || null);
+      this.rainheightData.push(rainheight || null);
+
 
       if (this.timeData.length > this.maxLen) {
         this.timeData.shift();
         this.temperatureData.shift();
         this.humidityData.shift();
+        this.winddirectionData.shift();
+        this.windintensityData.shift();
+        this.rainheightData.shift();
       }
     }
   }
@@ -77,7 +87,41 @@ $(document).ready(() => {
         pointHoverBackgroundColor: 'rgba(24, 120, 240, 1)',
         pointHoverBorderColor: 'rgba(24, 120, 240, 1)',
         spanGaps: true,
+      },
+      {
+        fill: false,
+        label: 'winddirection',
+        yAxisID: 'winddirection',
+        borderColor: 'rgba(199, 0, 0, 1)',
+        pointBoarderColor: 'rgba(199, 0, 0, 1)',
+        backgroundColor: 'rgba(199, 0, 0, 1)',
+        pointHoverBackgroundColor: 'rgba(199, 0, 0, 1)',
+        pointHoverBorderColor: 'rgba(199, 0, 0, 1)',
+        spanGaps: true,
+      },
+      {
+        fill: false,
+        label: 'windintensity',
+        yAxisID: 'windintensity',
+        borderColor: 'rgba(10, 209, 0, 1)',
+        pointBoarderColor: 'rgba(10, 209, 0, 1)',
+        backgroundColor: 'rgba(10, 209, 0, 1)',
+        pointHoverBackgroundColor: 'rgba(10, 209, 0, 1)',
+        pointHoverBorderColor: 'rgba(10, 209, 0, 1)',
+        spanGaps: true,
+      },
+      {
+        fill: false,
+        label: 'rainheight',
+        yAxisID: 'rainheight',
+        borderColor: 'rgba(0, 0, 0, 1)',
+        pointBoarderColor: 'rgba(0, 0, 0, 1)',
+        backgroundColor: 'rgba(0, 0, 0, 1)',
+        pointHoverBackgroundColor: 'rgba(0, 0, 0, 1)',
+        pointHoverBorderColor: 'rgba(0, 0, 0, 1)',
+        spanGaps: true,
       }
+
     ]
   };
 
@@ -100,7 +144,38 @@ $(document).ready(() => {
           display: true,
         },
         position: 'right',
-      }]
+      },
+      {
+        id: 'winddirection',
+        type: 'linear',
+        scaleLabel: {
+          labelString: 'Angle (°)',
+          display: true,
+        },
+        position: 'right',
+      },
+      {
+        id: 'windintensity',
+        type: 'linear',
+        scaleLabel: {
+          labelString: 'Intensity (m/s)',
+          display: true,
+        },
+        position: 'left',
+      },
+
+      {
+        id: 'rainheight',
+        type: 'linear',
+        scaleLabel: {
+          labelString: 'height (mm)',
+          display: true,
+        },
+        position: 'right',
+      }
+
+    ]
+
     }
   };
 
@@ -124,6 +199,9 @@ $(document).ready(() => {
     chartData.labels = device.timeData;
     chartData.datasets[0].data = device.temperatureData;
     chartData.datasets[1].data = device.humidityData;
+    chartData.datasets[2].data = device.winddirectionData;
+    chartData.datasets[3].data = device.windintensityData;
+    charData.datasets[4].data = device.rainheightData;
   }
   listOfDevices.addEventListener('change', OnSelectionChange, false);
 
@@ -139,7 +217,7 @@ $(document).ready(() => {
       console.log(messageData);
 
       // time and either temperature or humidity are required
-      if (!messageData.MessageDate || (!messageData.IotData.temperature && !messageData.IotData.humidity)) {
+      if (!messageData.MessageDate || (!messageData.IotData.temperature && !messageData.IotData.humidity && !messageData.IotData.winddirection && !messageData.IotData.windintensity && !messageData.IotData.rainheight)) {
         return;
       }
 
@@ -147,13 +225,13 @@ $(document).ready(() => {
       const existingDeviceData = trackedDevices.findDevice(messageData.DeviceId);
 
       if (existingDeviceData) {
-        existingDeviceData.addData(messageData.MessageDate, messageData.IotData.temperature, messageData.IotData.humidity);
+        existingDeviceData.addData(messageData.MessageDate, messageData.IotData.temperature, messageData.IotData.humidity, messageData.IotData.winddirection, messageData.IotData.windintensity, messageData.IotData.rainheight);
       } else {
         const newDeviceData = new DeviceData(messageData.DeviceId);
         trackedDevices.devices.push(newDeviceData);
         const numDevices = trackedDevices.getDevicesCount();
         deviceCount.innerText = numDevices === 1 ? `${numDevices} device` : `${numDevices} devices`;
-        newDeviceData.addData(messageData.MessageDate, messageData.IotData.temperature, messageData.IotData.humidity);
+        newDeviceData.addData(messageData.MessageDate, messageData.IotData.temperature, messageData.IotData.humidity, messageData.IotData.winddirection, messageData.IotData.windintensity, messageData.IotData.rainheight);
 
         // add device to the UI list
         const node = document.createElement('option');
